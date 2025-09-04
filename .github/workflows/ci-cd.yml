@@ -1,4 +1,4 @@
-name: FastTech Foods CI/CD
+name: Fase 4 CI/CD
 on: [push]
 
 env:
@@ -33,16 +33,14 @@ jobs:
     strategy:
       matrix:
         include:
-          - service: AuthService
-            service_slug: auth-service
-          - service: MenuService
-            service_slug: menu-service
-          - service: OrderService
-            service_slug: order-service
-          - service: KitchenService
-            service_slug: kitchen-service
-          - service: Consumer.Service
-            service_slug: consumer-service
+          - service: CreateContact
+            service_slug: create-contact
+          - service: ReadContact
+            service_slug: read-contact
+          - service: UpdateContact
+            service_slug: update-contact
+          - service: DeleteContact
+            service_slug: delete-contact
     
     steps:
     - uses: actions/checkout@v3
