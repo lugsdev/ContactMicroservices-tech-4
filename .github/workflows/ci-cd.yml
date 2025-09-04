@@ -55,7 +55,7 @@ jobs:
       id: meta
       uses: docker/metadata-action@v4
       with:
-        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.service_slug }}
+        images: ${{ env.REGISTRY }}/zennbyte/${{ matrix.service_slug }}
         tags: |
           latest
     

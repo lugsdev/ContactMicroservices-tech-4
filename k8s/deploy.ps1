@@ -2,7 +2,7 @@
 
 $ErrorActionPreference = "Stop"
 
-$Namespace = "contact-microservices"
+$Namespace = "contactmicroservices"
 $KubectlCmd = "kubectl"
 
 Write-Host "🚀 Iniciando deploy dos microserviços de contatos no Kubernetes..."

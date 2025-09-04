@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: contact-delete-api
-  namespace: contact-microservices
+  namespace: contactmicroservices
   labels:
     app: contact-delete-api
     app.kubernetes.io/name: contact-delete-api
@@ -37,7 +37,7 @@ spec:
     spec:
       containers:
       - name: contact-delete-api
-        image: ghcr.io/your-username/contact-delete-api:latest
+        image: ghcr.io/zennbyte/contact-delete-api:latest
         ports:
         - containerPort: 8080
           name: http

@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: contact-update-api
-  namespace: contact-microservices
+  namespace: contactmicroservices
   labels:
     app: contact-update-api
     app.kubernetes.io/name: contact-update-api
@@ -37,7 +37,7 @@ spec:
     spec:
       containers:
       - name: contact-update-api
-        image: ghcr.io/your-username/contact-update-api:latest
+        image: ghcr.io/zennbyte/contact-update-api:latest
         ports:
         - containerPort: 8080
           name: http

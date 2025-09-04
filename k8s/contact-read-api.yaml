@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: contact-read-api
-  namespace: contact-microservices
+  namespace: contactmicroservices
   labels:
     app: contact-read-api
     app.kubernetes.io/name: contact-read-api
@@ -37,7 +37,7 @@ spec:
     spec:
       containers:
       - name: contact-read-api
-        image: ghcr.io/your-username/contact-read-api:latest
+        image: ghcr.io/zennbyte/contact-read-api:latest
         ports:
         - containerPort: 8080
           name: http

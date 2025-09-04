@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: contact-config
-  namespace: contact-microservices
+  namespace: contactmicroservices
   labels:
     app.kubernetes.io/name: contact-config
     app.kubernetes.io/version: "1.0.0"
@@ -36,7 +36,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: sqlserver-config
-  namespace: contact-microservices
+  namespace: contactmicroservices
   labels:
     app.kubernetes.io/name: sqlserver-config
     app.kubernetes.io/version: "1.0.0"
