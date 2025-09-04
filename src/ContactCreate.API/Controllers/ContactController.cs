@@ -37,14 +37,12 @@ namespace ContactCreate.API.Controllers
                     return BadRequest(ModelState);
                 }
 
-                // Verificar se já existe contato com o mesmo email
                 var existingContact = await _contactRepository.GetByEmailAsync(createContactDto.Email);
                 if (existingContact != null)
                 {
                     return Conflict($"Já existe um contato com o email {createContactDto.Email}");
                 }
 
-                // Criar o contato
                 var contact = new Contact
                 {
                     Nome = createContactDto.Nome,
@@ -54,10 +52,8 @@ namespace ContactCreate.API.Controllers
                     DataCriacao = DateTime.UtcNow
                 };
 
-                // Salvar no banco de dados via Dapper
                 var createdContact = await _contactRepository.CreateAsync(contact);
 
-                // Publicar evento no RabbitMQ
                 var contactCreatedEvent = new ContactCreatedEvent
                 {
                     ContactId = createdContact.Id,
@@ -71,7 +67,6 @@ namespace ContactCreate.API.Controllers
                 _logger.LogInformation("Evento ContactCreated publicado para contato ID: {Id}", createdContact.Id);
                 _logger.LogInformation("Contato criado com sucesso. ID: {Id}", createdContact.Id);
 
-                // Retornar resposta
                 var response = new ContactResponseDto
                 {
                     Id = createdContact.Id,
