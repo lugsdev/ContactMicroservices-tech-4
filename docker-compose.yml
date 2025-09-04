@@ -1,0 +1,146 @@
+services:
+  # SQL Server
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: contact-sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=ContactsDB@2024
+      - MSSQL_PID=Express
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+      - ./src/Shared/Infrastructure/Scripts:/scripts
+    networks:
+      - contact-network
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P ContactsDB@2024 -Q 'SELECT 1'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: contact-rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - contact-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ContactCreate API
+  contact-create-api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.ContactCreate
+    container_name: contact-create-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=ContactsDB;User Id=sa;Password=ContactsDB@2024;TrustServerCertificate=true;
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__Port=5672
+      - RabbitMQ__UserName=guest
+      - RabbitMQ__Password=guest
+    ports:
+      - "5001:8080"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - contact-network
+    restart: unless-stopped
+
+  # ContactRead API
+  contact-read-api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.ContactRead
+    container_name: contact-read-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=ContactsDB;User Id=sa;Password=ContactsDB@2024;TrustServerCertificate=true;
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__Port=5672
+      - RabbitMQ__UserName=guest
+      - RabbitMQ__Password=guest
+    ports:
+      - "5002:8080"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - contact-network
+    restart: unless-stopped
+
+  # ContactUpdate API
+  contact-update-api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.ContactUpdate
+    container_name: contact-update-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=ContactsDB;User Id=sa;Password=ContactsDB@2024;TrustServerCertificate=true;
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__Port=5672
+      - RabbitMQ__UserName=guest
+      - RabbitMQ__Password=guest
+    ports:
+      - "5003:8080"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - contact-network
+    restart: unless-stopped
+
+  # ContactDelete API
+  contact-delete-api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.ContactDelete
+    container_name: contact-delete-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=ContactsDB;User Id=sa;Password=ContactsDB@2024;TrustServerCertificate=true;
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__Port=5672
+      - RabbitMQ__UserName=guest
+      - RabbitMQ__Password=guest
+    ports:
+      - "5004:8080"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - contact-network
+    restart: unless-stopped
+
+volumes:
+  sqlserver_data:
+  rabbitmq_data:
+
+networks:
+  contact-network:
+    driver: bridge
+

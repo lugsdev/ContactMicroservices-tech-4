@@ -1,0 +1,114 @@
+name: ContactRead.API CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'src/ContactRead.API/**'
+      - 'src/Shared/**'
+      - 'docker/Dockerfile.ContactRead'
+      - '.github/workflows/contact-read-api.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'src/ContactRead.API/**'
+      - 'src/Shared/**'
+      - 'docker/Dockerfile.ContactRead'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: contact-read-api
+  DOTNET_VERSION: '8.0.x'
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+        
+    - name: Restore dependencies
+      run: dotnet restore src/ContactRead.API/ContactRead.API.csproj
+      
+    - name: Build
+      run: dotnet build src/ContactRead.API/ContactRead.API.csproj --no-restore --configuration Release
+      
+    - name: Test
+      run: dotnet test src/ContactRead.API/ContactRead.API.csproj --no-build --configuration Release --verbosity normal
+
+  build-and-push:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    permissions:
+      contents: read
+      packages: write
+      
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
+          
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./docker/Dockerfile.ContactRead
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.ref == 'refs/heads/develop'
+    environment: staging
+    
+    steps:
+    - name: Deploy to staging
+      run: |
+        echo "🚀 Deploying ContactRead.API to staging environment"
+        echo "Image: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:develop"
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    
+    steps:
+    - name: Deploy to production
+      run: |
+        echo "🚀 Deploying ContactRead.API to production environment"
+        echo "Image: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest"
+

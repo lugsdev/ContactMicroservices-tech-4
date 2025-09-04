@@ -1,0 +1,147 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: contact-update-api
+  namespace: contact-microservices
+  labels:
+    app: contact-update-api
+    app.kubernetes.io/name: contact-update-api
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/component: api
+    app.kubernetes.io/part-of: contact-system
+    app.kubernetes.io/managed-by: kubectl
+    tier: backend
+    operation: update
+  annotations:
+    description: "Microserviço responsável pela atualização de contatos"
+    deployment.kubernetes.io/revision: "1"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: contact-update-api
+  template:
+    metadata:
+      labels:
+        app: contact-update-api
+        app.kubernetes.io/name: contact-update-api
+        app.kubernetes.io/version: "1.0.0"
+        app.kubernetes.io/component: api
+        app.kubernetes.io/part-of: contact-system
+        tier: backend
+        operation: update
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: contact-update-api
+        image: ghcr.io/your-username/contact-update-api:latest
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          valueFrom:
+            configMapKeyRef:
+              name: contact-config
+              key: ASPNETCORE__ENVIRONMENT
+        - name: ASPNETCORE_URLS
+          valueFrom:
+            configMapKeyRef:
+              name: contact-config
+              key: ASPNETCORE__URLS
+        - name: ConnectionStrings__DefaultConnection
+          valueFrom:
+            secretKeyRef:
+              name: contact-secrets
+              key: CONNECTIONSTRINGS__DEFAULTCONNECTION
+        - name: RabbitMQ__HostName
+          valueFrom:
+            configMapKeyRef:
+              name: contact-config
+              key: RABBITMQ__HOSTNAME
+        - name: RabbitMQ__Port
+          valueFrom:
+            configMapKeyRef:
+              name: contact-config
+              key: RABBITMQ__PORT
+        - name: RabbitMQ__UserName
+          valueFrom:
+            configMapKeyRef:
+              name: contact-config
+              key: RABBITMQ__USERNAME
+        - name: RabbitMQ__Password
+          valueFrom:
+            secretKeyRef:
+              name: contact-secrets
+              key: RABBITMQ__PASSWORD
+        - name: RabbitMQ__VirtualHost
+          valueFrom:
+            configMapKeyRef:
+              name: contact-config
+              key: RABBITMQ__VIRTUALHOST
+        - name: RabbitMQ__ExchangeName
+          valueFrom:
+            configMapKeyRef:
+              name: contact-config
+              key: RABBITMQ__EXCHANGENAME
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /api/contact/health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /api/contact/health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 3
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: contact-update-api-service
+  namespace: contact-microservices
+  labels:
+    app: contact-update-api
+    app.kubernetes.io/name: contact-update-api-service
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/component: service
+    app.kubernetes.io/part-of: contact-system
+    app.kubernetes.io/managed-by: kubectl
+  annotations:
+    description: "Service para o microserviço ContactUpdate.API"
+spec:
+  selector:
+    app: contact-update-api
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8080
+    protocol: TCP
+  type: ClusterIP
+

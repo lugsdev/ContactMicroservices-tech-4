@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: contact-config
+  namespace: contact-microservices
+  labels:
+    app.kubernetes.io/name: contact-config
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/component: configuration
+    app.kubernetes.io/part-of: contact-system
+    app.kubernetes.io/managed-by: kubectl
+  annotations:
+    description: "Configurações compartilhadas para os microserviços de contatos"
+data:
+  # Configurações do RabbitMQ
+  RABBITMQ__HOSTNAME: "rabbitmq-service"
+  RABBITMQ__PORT: "5672"
+  RABBITMQ__USERNAME: "guest"
+  RABBITMQ__VIRTUALHOST: "/"
+  RABBITMQ__EXCHANGENAME: "contact_events"
+  
+  # Configurações gerais
+  ASPNETCORE__ENVIRONMENT: "Production"
+  ASPNETCORE__URLS: "http://+:8080"
+  
+  # Configurações de logging
+  LOGGING__LOGLEVEL__DEFAULT: "Information"
+  LOGGING__LOGLEVEL__MICROSOFT_ASPNETCORE: "Warning"
+  
+  # Configurações de health check
+  HEALTHCHECK__TIMEOUT: "30"
+  HEALTHCHECK__INTERVAL: "60"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sqlserver-config
+  namespace: contact-microservices
+  labels:
+    app.kubernetes.io/name: sqlserver-config
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/component: database-configuration
+    app.kubernetes.io/part-of: contact-system
+    app.kubernetes.io/managed-by: kubectl
+  annotations:
+    description: "Configurações do SQL Server"
+data:
+  ACCEPT_EULA: "Y"
+  MSSQL_PID: "Express"
+  MSSQL_TCP_PORT: "1433"
+

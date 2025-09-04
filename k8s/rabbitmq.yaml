@@ -1,0 +1,159 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbitmq
+  namespace: contact-microservices
+  labels:
+    app: rabbitmq
+    app.kubernetes.io/name: rabbitmq
+    app.kubernetes.io/version: "3.12-management"
+    app.kubernetes.io/component: message-broker
+    app.kubernetes.io/part-of: contact-system
+    app.kubernetes.io/managed-by: kubectl
+  annotations:
+    description: "RabbitMQ para comunicação entre microserviços"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rabbitmq
+  template:
+    metadata:
+      labels:
+        app: rabbitmq
+        app.kubernetes.io/name: rabbitmq
+        app.kubernetes.io/version: "3.12-management"
+        app.kubernetes.io/component: message-broker
+        app.kubernetes.io/part-of: contact-system
+    spec:
+      containers:
+      - name: rabbitmq
+        image: rabbitmq:3.12-management
+        ports:
+        - containerPort: 5672
+          name: amqp
+          protocol: TCP
+        - containerPort: 15672
+          name: management
+          protocol: TCP
+        env:
+        - name: RABBITMQ_DEFAULT_USER
+          valueFrom:
+            configMapKeyRef:
+              name: contact-config
+              key: RABBITMQ__USERNAME
+        - name: RABBITMQ_DEFAULT_PASS
+          valueFrom:
+            secretKeyRef:
+              name: contact-secrets
+              key: RABBITMQ__PASSWORD
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "400m"
+        volumeMounts:
+        - name: rabbitmq-data
+          mountPath: /var/lib/rabbitmq
+        livenessProbe:
+          exec:
+            command:
+            - rabbitmq-diagnostics
+            - ping
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - rabbitmq-diagnostics
+            - ping
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+      volumes:
+      - name: rabbitmq-data
+        persistentVolumeClaim:
+          claimName: rabbitmq-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq-service
+  namespace: contact-microservices
+  labels:
+    app: rabbitmq
+    app.kubernetes.io/name: rabbitmq-service
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/component: message-broker-service
+    app.kubernetes.io/part-of: contact-system
+    app.kubernetes.io/managed-by: kubectl
+  annotations:
+    description: "Service para o RabbitMQ"
+spec:
+  selector:
+    app: rabbitmq
+  ports:
+  - name: amqp
+    port: 5672
+    targetPort: 5672
+    protocol: TCP
+  - name: management
+    port: 15672
+    targetPort: 15672
+    protocol: TCP
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq-management-service
+  namespace: contact-microservices
+  labels:
+    app: rabbitmq
+    app.kubernetes.io/name: rabbitmq-management-service
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/component: management-service
+    app.kubernetes.io/part-of: contact-system
+    app.kubernetes.io/managed-by: kubectl
+  annotations:
+    description: "Service para o RabbitMQ Management UI"
+spec:
+  selector:
+    app: rabbitmq
+  ports:
+  - name: management
+    port: 80
+    targetPort: 15672
+    protocol: TCP
+  type: LoadBalancer
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: rabbitmq-pvc
+  namespace: contact-microservices
+  labels:
+    app: rabbitmq
+    app.kubernetes.io/name: rabbitmq-pvc
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/component: storage
+    app.kubernetes.io/part-of: contact-system
+    app.kubernetes.io/managed-by: kubectl
+  annotations:
+    description: "Persistent Volume Claim para dados do RabbitMQ"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: standard
+

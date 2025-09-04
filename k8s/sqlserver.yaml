@@ -1,0 +1,146 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sqlserver
+  namespace: contact-microservices
+  labels:
+    app: sqlserver
+    app.kubernetes.io/name: sqlserver
+    app.kubernetes.io/version: "2022-latest"
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: contact-system
+    app.kubernetes.io/managed-by: kubectl
+  annotations:
+    description: "SQL Server para os microserviços de contatos"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sqlserver
+  template:
+    metadata:
+      labels:
+        app: sqlserver
+        app.kubernetes.io/name: sqlserver
+        app.kubernetes.io/version: "2022-latest"
+        app.kubernetes.io/component: database
+        app.kubernetes.io/part-of: contact-system
+    spec:
+      containers:
+      - name: sqlserver
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        ports:
+        - containerPort: 1433
+          name: mssql
+          protocol: TCP
+        env:
+        - name: ACCEPT_EULA
+          valueFrom:
+            configMapKeyRef:
+              name: sqlserver-config
+              key: ACCEPT_EULA
+        - name: MSSQL_PID
+          valueFrom:
+            configMapKeyRef:
+              name: sqlserver-config
+              key: MSSQL_PID
+        - name: SA_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: sqlserver-secrets
+              key: SA_PASSWORD
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "500m"
+          limits:
+            memory: "4Gi"
+            cpu: "1000m"
+        volumeMounts:
+        - name: sqlserver-data
+          mountPath: /var/opt/mssql
+        livenessProbe:
+          exec:
+            command:
+            - /opt/mssql-tools/bin/sqlcmd
+            - -S
+            - localhost
+            - -U
+            - sa
+            - -P
+            - $(SA_PASSWORD)
+            - -Q
+            - SELECT 1
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - /opt/mssql-tools/bin/sqlcmd
+            - -S
+            - localhost
+            - -U
+            - sa
+            - -P
+            - $(SA_PASSWORD)
+            - -Q
+            - SELECT 1
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+      volumes:
+      - name: sqlserver-data
+        persistentVolumeClaim:
+          claimName: sqlserver-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sqlserver-service
+  namespace: contact-microservices
+  labels:
+    app: sqlserver
+    app.kubernetes.io/name: sqlserver-service
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/component: database-service
+    app.kubernetes.io/part-of: contact-system
+    app.kubernetes.io/managed-by: kubectl
+  annotations:
+    description: "Service para o SQL Server"
+spec:
+  selector:
+    app: sqlserver
+  ports:
+  - name: mssql
+    port: 1433
+    targetPort: 1433
+    protocol: TCP
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sqlserver-pvc
+  namespace: contact-microservices
+  labels:
+    app: sqlserver
+    app.kubernetes.io/name: sqlserver-pvc
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/component: storage
+    app.kubernetes.io/part-of: contact-system
+    app.kubernetes.io/managed-by: kubectl
+  annotations:
+    description: "Persistent Volume Claim para dados do SQL Server"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: standard
+

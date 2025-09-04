@@ -1,0 +1,99 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: contact-microservices-ingress
+  namespace: contact-microservices
+  labels:
+    app.kubernetes.io/name: contact-microservices-ingress
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/component: ingress
+    app.kubernetes.io/part-of: contact-system
+    app.kubernetes.io/managed-by: kubectl
+  annotations:
+    description: "Ingress para expor os microserviços de contatos"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - api.contatos.com
+    secretName: contact-microservices-tls
+  rules:
+  - host: api.contatos.com
+    http:
+      paths:
+      # ContactCreate API
+      - path: /create(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: contact-create-api-service
+            port:
+              number: 80
+      # ContactRead API
+      - path: /read(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: contact-read-api-service
+            port:
+              number: 80
+      # ContactUpdate API
+      - path: /update(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: contact-update-api-service
+            port:
+              number: 80
+      # ContactDelete API
+      - path: /delete(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: contact-delete-api-service
+            port:
+              number: 80
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: rabbitmq-management-ingress
+  namespace: contact-microservices
+  labels:
+    app.kubernetes.io/name: rabbitmq-management-ingress
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/component: management-ingress
+    app.kubernetes.io/part-of: contact-system
+    app.kubernetes.io/managed-by: kubectl
+  annotations:
+    description: "Ingress para RabbitMQ Management UI"
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: rabbitmq-auth
+    nginx.ingress.kubernetes.io/auth-realm: 'Authentication Required - RabbitMQ Management'
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - rabbitmq.contatos.com
+    secretName: rabbitmq-management-tls
+  rules:
+  - host: rabbitmq.contatos.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: rabbitmq-management-service
+            port:
+              number: 80
+
