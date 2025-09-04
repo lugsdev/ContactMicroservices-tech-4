@@ -273,56 +273,7 @@ Configure os seguintes secrets no GitHub:
 - `DOCKER_USERNAME` - Usuário Docker Hub (opcional)
 - `DOCKER_PASSWORD` - Senha Docker Hub (opcional)
 
-## 📁 Estrutura do Projeto
-
-```
-ContactMicroservices/
-├── src/
-│   ├── ContactCreate.API/          # Microserviço de criação
-│   ├── ContactRead.API/            # Microserviço de leitura
-│   ├── ContactUpdate.API/          # Microserviço de atualização
-│   ├── ContactDelete.API/          # Microserviço de exclusão
-│   └── Shared/
-│       ├── ContactModels/          # Modelos e DTOs compartilhados
-│       ├── Common/                 # Utilitários e mensageria
-│       └── Infrastructure/         # Repositórios e acesso a dados
-├── docker/                         # Dockerfiles e scripts
-├── k8s/                           # Manifestos Kubernetes
-├── .github/workflows/             # GitHub Actions
-├── docker-compose.yml             # Orquestração local
-└── README.md                      # Esta documentação
-```
-
-## 🤝 Contribuição
-
-1. Fork o projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
-3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-4. Push para a branch (`git push origin feature/AmazingFeature`)
-5. Abra um Pull Request
-
 ## 📄 Licença
 
 Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](LICENSE) para detalhes.
-
-## 📞 Suporte
-
-- 📧 Email: devops@empresa.com
-- 🐛 Issues: [GitHub Issues](https://github.com/your-username/ContactMicroservices/issues)
-- 📖 Wiki: [GitHub Wiki](https://github.com/your-username/ContactMicroservices/wiki)
-
-## 🎯 Roadmap
-
-- [ ] Implementar autenticação JWT
-- [ ] Adicionar cache Redis
-- [ ] Implementar rate limiting
-- [ ] Adicionar testes de integração
-- [ ] Implementar OpenAPI/Swagger
-- [ ] Adicionar observabilidade com OpenTelemetry
-- [ ] Implementar CQRS pattern
-- [ ] Adicionar Event Sourcing
-
----
-
-**Desenvolvido com ❤️ pela equipe de desenvolvimento**
 
