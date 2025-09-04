@@ -1,0 +1,71 @@
+name: FastTech Foods CI/CD
+on: [push]
+
+env:
+  REGISTRY: docker.io
+  IMAGE_NAME: zennbyte
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 8.0.x
+        
+    - name: Restore dependencies
+      run: dotnet restore
+      
+    - name: Build
+      run: dotnet build --no-restore
+      
+    - name: Test
+      run: dotnet test --no-build --verbosity normal
+
+  build-and-push:
+    needs: test
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        include:
+          - service: AuthService
+            service_slug: auth-service
+          - service: MenuService
+            service_slug: menu-service
+          - service: OrderService
+            service_slug: order-service
+          - service: KitchenService
+            service_slug: kitchen-service
+          - service: Consumer.Service
+            service_slug: consumer-service
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Docker Login 
+      uses: docker/login-action@v3.0.0
+      with:
+        username: 'zennbyte'
+        password: ${{ secrets.DOCKER_PASSWORD }}
+    
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v4
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.service_slug }}
+        tags: |
+          latest
+    
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        file: ./src/${{ matrix.service }}/Dockerfile
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
