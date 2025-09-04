@@ -125,7 +125,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: contact-delete-api-service
-  namespace: contact-microservices
+  namespace: contactmicroservices
   labels:
     app: contact-delete-api
     app.kubernetes.io/name: contact-delete-api-service

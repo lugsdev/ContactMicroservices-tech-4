@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: sqlserver
-  namespace: contact-microservices
+  namespace: contactmicroservices
   labels:
     app: sqlserver
     app.kubernetes.io/name: sqlserver
@@ -101,7 +101,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: sqlserver-service
-  namespace: contact-microservices
+  namespace: contactmicroservices
   labels:
     app: sqlserver
     app.kubernetes.io/name: sqlserver-service
@@ -126,7 +126,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: sqlserver-pvc
-  namespace: contact-microservices
+  namespace: contactmicroservices
   labels:
     app: sqlserver
     app.kubernetes.io/name: sqlserver-pvc
