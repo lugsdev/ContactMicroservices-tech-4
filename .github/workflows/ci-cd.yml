@@ -33,13 +33,13 @@ jobs:
     strategy:
       matrix:
         include:
-          - service: ContactCreate
+          - service: ContactCreate.API
             service_slug: create-contact
-          - service: ContactRead
+          - service: ContactRead.API
             service_slug: read-contact
-          - service: ContactUpdate
+          - service: ContactUpdate.API
             service_slug: update-contact
-          - service: ContactDelete
+          - service: ContactDelete.API
             service_slug: delete-contact
     
     steps:
